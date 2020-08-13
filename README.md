@@ -14,8 +14,8 @@ has since been superseded by the `FreeImage` library.
 
 ```
 make
-./grit fromager.bmp
-./grit fromager-exploit.bmp
+./grit fromager/fromager.bmp
+./grit fromager/fromager-exploit.bmp
 ```
 
 `fromager.bmp` is a simple test image.
@@ -46,6 +46,6 @@ append 12 additional bytes to the file so it can satisfy a read of length
 On Linux, the 12 byte overflow overwrites heap metadata and triggers an
 assertion failure in the memory allocator.
 
-Hex dumps of the original and modified images are available in `fromager.hex`
-and `fromager-exploit.hex`.  Run `diff -u fromager.hex fromager-exploit.hex` to
-see the changes.
+Hex dumps of the original and modified images are available in
+`fromager/fromager.hex` and `fromager/fromager-exploit.hex`.  Run `diff -u
+fromager/fromager.hex fromager/fromager-exploit.hex` to see the changes.
