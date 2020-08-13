@@ -90,7 +90,7 @@ EXTLIB_DIR	:= extlib
 # === Grit ===
 
 GRIT_DIR	:=	srcgrit
-GRIT_SRC	:=	grit_main.cpp cli.cpp fi.cpp
+GRIT_SRC	:=	grit_main.cpp cli.cpp
 GRIT_OBJ	:=	$(addprefix build/, $(GRIT_SRC:.cpp=.o))
 
 DEPENDS		:=	$(GRIT_OBJ:.o=.d) $(LIBCLDIB_OBJ:.o=.d) $(LIBGRIT_OBJ:.o=.d)
@@ -124,7 +124,7 @@ $(LIBCLDIB)	:	$(LIBCLDIB_OBJ)
 $(LIBGRIT)	:	$(LIBGRIT_OBJ)
 
 $(TARGET)	:	$(LIBCLDIB) $(LIBGRIT) $(GRIT_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(GRIT_OBJ) $(LIBPATHS) -lgrit -lcldib -lfreeimage
+	$(CXX) $(LDFLAGS) -o $@ $(GRIT_OBJ) $(LIBPATHS) -lgrit -lcldib
 
 
 build:
