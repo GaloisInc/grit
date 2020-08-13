@@ -39,7 +39,7 @@ static BITMAPINFOHEADER bmp_info_header SECRET_GLOBAL = {
     .biClrImportant = 0,
 };
 
-const size_t IMAGE_DATA_LEN = 0x80;
+const size_t IMAGE_DATA_LEN = 256;
 static uint8_t bmp_image_data[IMAGE_DATA_LEN] SECRET_GLOBAL = {
     // Doesn't matter - we care only about the length, which must be at least
     // 0x3c.
@@ -57,16 +57,18 @@ extern "C" {
     };
 
     FILE* fopen(const char* path, const char* mode) {
+        TRACE("open %s, mode %s\n", path, mode);
         if (strcmp(path, "fromager.bmp") != 0 || strcmp(mode, "rb") != 0) {
             return NULL;
         }
 
-        my_file* ptr = new my_file;
+        my_file* ptr = (my_file*)malloc(sizeof(my_file));
+        ptr->offset = 0;
         return (FILE*)ptr;
     }
 
     int fclose(FILE* f) {
-        delete (my_file*)f;
+        free((void*)f);
         return 0;
     }
 
@@ -131,6 +133,11 @@ extern "C" {
         memcpy(ptr, &bmp_image_data[fp2->offset], count * size);
         fp2->offset += count * size;
         return count;
+    }
+
+    // Clang optimizes `fread` to `fread_unlocked` on -O1.
+    size_t fread_unlocked(void* ptr, size_t size, size_t count, FILE* fp) {
+        return fread(ptr, size, count, fp);
     }
 }
 
