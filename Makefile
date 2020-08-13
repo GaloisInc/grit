@@ -43,6 +43,7 @@ endif
 
 
 TARGET	:=	grit$(EXEEXT)
+DRIVER_TARGET	:=	driver$(EXEEXT)
 
 # ---------------------------------------------------------------------
 # Library directories
@@ -95,11 +96,17 @@ GRIT_DIR	:=	srcgrit
 GRIT_SRC	:=	grit_main.cpp cli.cpp
 GRIT_OBJ	:=	$(addprefix build/, $(GRIT_SRC:.cpp=.o))
 
-DEPENDS		:=	$(GRIT_OBJ:.o=.d) $(LIBCLDIB_OBJ:.o=.d) $(LIBGRIT_OBJ:.o=.d)
+# === DRIVER ===
+
+DRIVER_DIR	:=	fromager
+DRIVER_SRC	:=	driver.cpp
+DRIVER_OBJ	:=	$(addprefix build/, $(DRIVER_SRC:.cpp=.o))
+
+DEPENDS		:=	$(GRIT_OBJ:.o=.d) $(DRIVER_OBJ:.o=.d) $(LIBCLDIB_OBJ:.o=.d) $(LIBGRIT_OBJ:.o=.d)
 
 # ---------------------------------------------------------------------
 
-SRCDIRS	:= $(CLDIB_DIR) $(LIBGRIT_DIR) $(GRIT_DIR) $(EXTLIB_DIR)
+SRCDIRS	:= $(CLDIB_DIR) $(LIBGRIT_DIR) $(GRIT_DIR) $(DRIVER_DIR) $(EXTLIB_DIR)
 INCDIRS	:= $(CLDIB_DIR) $(LIBGRIT_DIR) $(EXTLIB_DIR)
 LIBDIRS	:= .
 
@@ -128,12 +135,15 @@ $(LIBGRIT)	:	$(LIBGRIT_OBJ)
 $(TARGET)	:	$(LIBCLDIB) $(LIBGRIT) $(GRIT_OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $(GRIT_OBJ) $(LIBPATHS) -lgrit -lcldib
 
+$(DRIVER_TARGET)	:	$(LIBCLDIB) $(LIBGRIT) $(DRIVER_OBJ)
+	$(CXX) $(LDFLAGS) -o $@ $(DRIVER_OBJ) $(LIBPATHS) -lgrit -lcldib
+
 
 build:
 	@[ -d $@ ] || mkdir -p $@
 
 clean	:
-	rm -fr $(TARGET) build $(LIBGRIT) $(LIBCLDIB) *.bz2
+	rm -fr $(TARGET) $(DRIVER_TARGET) build $(LIBGRIT) $(LIBCLDIB) *.bz2
 
 install:
 	cp  $(TARGET) $(EXTRAINSTALL) $(PREFIX)

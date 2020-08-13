@@ -1,4 +1,5 @@
 *.o
 *.a
 /grit
+/driver
 /build/
