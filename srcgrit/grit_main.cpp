@@ -1102,6 +1102,16 @@ int run_main(int argc, char **argv)
 	return result;
 }
 
+CLDIB *dib_load_bmp(const char *fpath, void *extra)
+{
+    return BmpLoad(fpath);
+}
+
+bool dib_save_bmp(const CLDIB *dib, const char *fpath, void *extra)
+{
+    return BmpSave(fpath, (CLDIB*)dib);
+}
+
 int main(int argc, char **argv)
 {
 	if( argc < 2 || !strcmp(argv[1], "-?") || !strcmp(argv[1], "--help") )
@@ -1112,6 +1122,8 @@ int main(int argc, char **argv)
 	}
 
 	// Initialize, run and exit ---
+    dib_set_load_proc(dib_load_bmp);
+    dib_set_save_proc(dib_save_bmp);
 	int result= run_main(argc, argv);
 
 	//system("pause");

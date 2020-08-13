@@ -98,7 +98,7 @@ CImgFile *ifl_from_path(CImgFile **list, const char *fpath)
 	int ii;
 	for(ii=0; list[ii] != NULL; ii++)
 	{
-		if(stricmp(fext, list[ii]->GetExt()) == 0)	// found it
+		if(strcasecmp(fext, list[ii]->GetExt()) == 0)	// found it
 			return list[ii];
 		else	// not found, could be multiple-ext list
 		{
@@ -106,7 +106,7 @@ CImgFile *ifl_from_path(CImgFile **list, const char *fpath)
 			char *tok= strtok(extbuf, ",");
 			while(tok)
 			{
-				if(stricmp(fext, tok) == 0)
+				if(strcasecmp(fext, tok) == 0)
 				{	
 					free(extbuf);
 					return list[ii];

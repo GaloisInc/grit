@@ -121,7 +121,26 @@ static inline BYTE GetBValue( COLORREF color )
 #endif	// _MSC_VER
 
 
-#include <stdint.h>
+typedef struct tagBITMAPCOREHEADER {
+  DWORD bcSize;
+  WORD  bcWidth;
+  WORD  bcHeight;
+  WORD  bcPlanes;
+  WORD  bcBitCount;
+} BITMAPCOREHEADER, *LPBITMAPCOREHEADER, *PBITMAPCOREHEADER;
+
+typedef enum
+{
+  BI_RGB = 0x0000,
+  BI_RLE8 = 0x0001,
+  BI_RLE4 = 0x0002,
+  BI_BITFIELDS = 0x0003,
+  BI_JPEG = 0x0004,
+  BI_PNG = 0x0005,
+  BI_CMYK = 0x000B,
+  BI_CMYKRLE8 = 0x000C,
+  BI_CMYKRLE4 = 0x000D
+} Compression;
 
 typedef struct tagBITMAPINFOHEADER {
   DWORD biSize;
@@ -143,7 +162,7 @@ typedef struct tagBITMAPFILEHEADER {
   WORD  bfReserved1;
   WORD  bfReserved2;
   DWORD bfOffBits;
-} BITMAPFILEHEADER, *LPBITMAPFILEHEADER, *PBITMAPFILEHEADER;
+} __attribute__((packed)) BITMAPFILEHEADER, *LPBITMAPFILEHEADER, *PBITMAPFILEHEADER;
 
 typedef struct tagRGBQUAD {
   BYTE rgbBlue;

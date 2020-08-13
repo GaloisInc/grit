@@ -59,7 +59,9 @@ LIBCLDIB_SRC	:=				\
 			cldib_core.cpp		\
 			cldib_tmap.cpp		\
 			cldib_tools.cpp		\
-			cldib_wu.cpp
+			cldib_wu.cpp		\
+			cldib_bmp.cpp		\
+			cldib_img.cpp
 
 LIBCLDIB_OBJ	:=	$(addprefix build/, $(LIBCLDIB_SRC:.cpp=.o))
 
