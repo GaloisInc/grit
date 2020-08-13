@@ -17,8 +17,10 @@ opt${LLVM_SUFFIX} \
     --internalize --internalize-public-api-list=main \
     --strip-debug --force-vector-width=1 \
     -O3 --scalarizer -O1 -o driver-opt.bc driver-full.bc
-# driver-opt.bc is the final LLVM output.
+
+# Disassemble to LLVM's textual IR format
+llvm-dis${LLVM_SUFFIX} driver-opt.bc -o driver-opt.ll
+# driver-opt.bc and driver-opt.ll are the final LLVM outputs.
 
 # Produce an executable
 clang++${LLVM_SUFFIX} -o driver driver-opt.bc -lm -lpthread
-

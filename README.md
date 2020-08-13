@@ -12,6 +12,19 @@ has since been superseded by the `FreeImage` library.
 
 ## Running
 
+To run the exploit driver:
+
+```
+fromager/build.sh
+./driver
+```
+
+This also produces `driver-opt.bc` and `driver-opt.ll`, containing the LLVM IR
+for the driver as a single module.
+
+To build the normal `grit` binary (note you may need to `make clean` when
+switching between `grit` and `driver` builds):
+
 ```
 make
 ./grit fromager/fromager.bmp
