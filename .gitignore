@@ -3,3 +3,5 @@
 /grit
 /driver
 /build/
+*.ll
+*.bc
