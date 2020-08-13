@@ -608,7 +608,7 @@ Mapsel dib_find(CLDIB *dib, CLDIB *tileset, int tileN, u32 flags)
 	int i;
 	int dibB= dib_get_bpp(dib);
 	u32 mask;
-	Mapsel me= { tileN };
+	Mapsel me= { (u32)tileN };
 
 	if( dibB == 8 && (flags & TMAP_PBANK) )
 	{
