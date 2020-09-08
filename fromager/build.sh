@@ -7,7 +7,7 @@ set -e
 # Build only the libraries we actually need.
 mkdir -p build
 make libcldib.a libgrit.a build/driver.o \
-    CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1"
+    CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti"
 
 # Link the full libs + driver into a single bitcode file
 llvm-link${LLVM_SUFFIX} -o driver-full.bc build/*.o
