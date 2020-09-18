@@ -4,23 +4,37 @@ set -e
 # Note: if your LLVM binaries have a version suffix (such as `llvm-link-9`),
 # set the `LLVM_SUFFIX` environment variable (e.g. `LLVM_SUFFIX=-9`).
 
+CC="clang${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1"
+CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti"
+
 # Build only the libraries we actually need.
-mkdir -p build
-make libcldib.a libgrit.a build/driver.o \
-    CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti"
+mkdir -p build build/fromager
+make libcldib.a libgrit.a build/driver.o CXX="$CXX"
 
 # Link the full libs + driver into a single bitcode file
-llvm-link${LLVM_SUFFIX} -o driver-full.bc build/*.o
+llvm-link${LLVM_SUFFIX} build/*.o -o build/fromager/driver-main.bc
 
 # Optimize, removing unused public symbols
 opt${LLVM_SUFFIX} \
     --internalize --internalize-public-api-list=main \
     --strip-debug --force-vector-width=1 \
-    -O3 --scalarizer -O1 -o driver-opt.bc driver-full.bc
+    -O3 --scalarizer -O1 \
+    build/fromager/driver-main.bc \
+    -o build/fromager/driver-opt.bc
+
+# Compile with -no-builtin so that Clang/LLVM doesn't try to optimize our
+# implementation of `memcpy` into a simple `memcpy` call.
+$CC -c fromager/libfromager.c -o build/fromager/libfromager.o -fno-builtin
+$CXX -c fromager/libfromager++.cpp -o build/fromager/libfromager++.o
+
+llvm-link${LLVM_SUFFIX} \
+    build/fromager/{driver-opt.bc,libfromager.o,libfromager++.o} \
+    -o driver-link.bc
 
 # Disassemble to LLVM's textual IR format
-llvm-dis${LLVM_SUFFIX} driver-opt.bc -o driver-opt.ll
-# driver-opt.bc and driver-opt.ll are the final LLVM outputs.
+llvm-dis${LLVM_SUFFIX} driver-link.bc -o driver-link.ll
+# driver-link.bc and driver-link.ll are the final LLVM outputs.
+sed -i -e 's/nofree//g' driver-link.ll
 
 # Produce an executable
 clang++${LLVM_SUFFIX} -o driver driver-opt.bc -lm -lpthread
