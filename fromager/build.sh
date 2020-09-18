@@ -11,6 +11,9 @@ CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti"
 mkdir -p build build/fromager
 make libcldib.a libgrit.a build/driver.o CXX="$CXX"
 
+$CXX -I cldib -I libgrit \
+    -c fromager/driver_secret.cpp -o build/fromager/driver_secret.o
+
 # Link the full libs + driver into a single bitcode file
 llvm-link${LLVM_SUFFIX} build/*.o -o build/fromager/driver-main.bc
 
@@ -22,13 +25,18 @@ opt${LLVM_SUFFIX} \
     build/fromager/driver-main.bc \
     -o build/fromager/driver-opt.bc
 
+llvm-link${LLVM_SUFFIX} \
+    build/fromager/driver-opt.bc \
+    build/fromager/driver_secret.o \
+    -o build/fromager/driver-full.bc
+
 # Compile with -no-builtin so that Clang/LLVM doesn't try to optimize our
 # implementation of `memcpy` into a simple `memcpy` call.
 $CC -c fromager/libfromager.c -o build/fromager/libfromager.o -fno-builtin
 $CXX -c fromager/libfromager++.cpp -o build/fromager/libfromager++.o
 
 llvm-link${LLVM_SUFFIX} \
-    build/fromager/{driver-opt.bc,libfromager.o,libfromager++.o} \
+    build/fromager/{driver-full.bc,libfromager.o,libfromager++.o} \
     -o driver-link.bc
 
 # Disassemble to LLVM's textual IR format
