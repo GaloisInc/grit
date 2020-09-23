@@ -34,12 +34,6 @@ uintptr_t* __cc_advise_poison(uintptr_t* start, uintptr_t* end);
 // Write `val` to `*ptr` and poison `*ptr`.  If `*ptr` is already poisoned, the
 // trace is invalid.
 void __cc_write_and_poison(uintptr_t* ptr, uintptr_t val);
-// Write `val` to `*ptr`, which should already be poisoned.  It is a program
-// bug if `*ptr` is not poisoned.
-void __cc_write_poisoned(uintptr_t* ptr, uintptr_t val);
-// Read from `*ptr`, which should already be poisoned.  It is a program bug if
-// `*ptr` is not poisoned.
-uintptr_t __cc_read_poisoned(uintptr_t* ptr);
 
 // Allocate a block of `size` words.  (Actual `libc` malloc works in bytes.)
 uintptr_t* malloc_words(size_t size) {
@@ -84,17 +78,17 @@ void free_words(uintptr_t* ptr) {
     // Ensure `ptr` points to the start of a region.
     __cc_bug_if((uintptr_t)ptr % region_size != 0);
 
+    // Write to `*ptr`.  This memory access lets us catch double-free and
+    // free-before-alloc by turning them into use-after-free and
+    // use-before-alloc bugs, which we catch by other means.
+    (*ptr) = 0;
+
+    // We free only after the write, so the interpreter's fine-grained
+    // allocation tracking doesn't flag it as a use-after-free.
     __cc_free(ptr);
 
-    uintptr_t* metadata = ptr + region_size - 1;
-    // Ensure the region is currently allocated.  This will indicate a bug if
-    // `*metadata` is not poisoned.
-    uintptr_t metadata_value = __cc_read_poisoned(metadata);
-    __cc_bug_if(metadata_value != 1);
-    // Mark the region as previously allocated.
-    __cc_write_poisoned(metadata, 0);
-
     // Choose an address to poison.
+    uintptr_t* metadata = ptr + region_size - 1;
     uintptr_t* poison = __cc_advise_poison(ptr, metadata);
     if (poison != NULL) {
         __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
