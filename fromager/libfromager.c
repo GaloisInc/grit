@@ -3,9 +3,23 @@
 #include <string.h>
 
 // Assert that the trace is valid only if `cond` is non-zero.
-void __cc_valid_if(int cond);
+void __cc_flag_invalid(void);
 // Indicate that the program has exhibited a bug if `cond` is non-zero.
-void __cc_bug_if(int cond);
+void __cc_flag_bug(void);
+
+// Assert that the trace is valid only if `cond` is non-zero.
+void __cc_valid_if(int cond) {
+    if (!cond) {
+        __cc_flag_invalid();
+    }
+}
+
+// Indicate that the program has exhibited a bug if `cond` is non-zero.
+void __cc_bug_if(int cond) {
+    if (cond) {
+        __cc_flag_bug();
+    }
+}
 
 // Allocate `size` words of memory.
 uintptr_t* __cc_malloc(size_t size);
