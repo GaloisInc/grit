@@ -22,22 +22,22 @@ void __cc_bug_if(int cond) {
 }
 
 // Allocate `size` words of memory.
-uintptr_t* __cc_malloc(size_t size);
+char* __cc_malloc(size_t size);
 // Free the allocation starting at `ptr`.
-void __cc_free(uintptr_t* ptr);
+void __cc_free(char* ptr);
 
 // Let the prover arbitrarily choose an address to poison in the range `start
 // <= ptr < end`.  The prover returns `NULL` to indicate that nothing should be
 // poisoned.
-uintptr_t* __cc_advise_poison(uintptr_t* start, uintptr_t* end);
+char* __cc_advise_poison(char* start, char* end);
 
 // Write `val` to `*ptr` and poison `*ptr`.  If `*ptr` is already poisoned, the
 // trace is invalid.
-void __cc_write_and_poison(uintptr_t* ptr, uintptr_t val);
+void __cc_write_and_poison(char* ptr, uintptr_t val);
 
 // Allocate a block of `size` words.  (Actual `libc` malloc works in bytes.)
-uintptr_t* malloc_words(size_t size) {
-    uintptr_t* ptr = __cc_malloc(size);
+char* malloc_words(size_t size) {
+    char* ptr = __cc_malloc(size);
 
     // Compute and validate the size of the allocation provided by the prover.
     uintptr_t addr = (uintptr_t)ptr;
@@ -51,11 +51,11 @@ uintptr_t* malloc_words(size_t size) {
     // already poisoned (this happens if the prover tries to return the same
     // region for two separate allocations).
     // region twice).
-    uintptr_t* metadata = ptr + region_size - 1;
+    char* metadata = ptr + region_size - 1;
     __cc_write_and_poison(metadata, 1);
 
     // Choose a word to poison in the range `ptr .. metadata`.
-    uintptr_t* poison = __cc_advise_poison(ptr + size, metadata);
+    char* poison = __cc_advise_poison(ptr + size, metadata);
     if (poison != NULL) {
         // The poisoned address must be in the unused space at the end of the
         // region.
@@ -66,7 +66,7 @@ uintptr_t* malloc_words(size_t size) {
     return ptr;
 }
 
-void free_words(uintptr_t* ptr) {
+void free_words(char* ptr) {
     if (ptr == NULL) {
         return;
     }
@@ -88,10 +88,9 @@ void free_words(uintptr_t* ptr) {
     __cc_free(ptr);
 
     // Choose an address to poison.
-    uintptr_t* metadata = ptr + region_size - 1;
-    uintptr_t* poison = __cc_advise_poison(ptr, metadata);
+    char* metadata = ptr + region_size - 1;
+    char* poison = __cc_advise_poison(ptr, metadata);
     if (poison != NULL) {
-        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
         // The pointer must be somewhere within the freed region.
         __cc_valid_if(ptr <= poison && poison < metadata);
         __cc_write_and_poison(poison, 0);
@@ -115,7 +114,7 @@ void* malloc(size_t size) {
 }
 
 void free(void* ptr) {
-    free_words((uintptr_t*)ptr);
+    free_words((char*)ptr);
 }
 
 int strcmp(const char *s1, const char *s2) {
