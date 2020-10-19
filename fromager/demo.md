@@ -3,7 +3,7 @@ Repos:
 * fromager/cheesecloth/grit>, `master` branch
 * fromager/cheesecloth/microram>, `no-implicit-flag` branch
 * fromager/cheesecloth/witness-checker>, `grit-support` branch
-* marc/swanky> ???
+* marc/swanky>, `mac-and-cheese` branch
 
 Other dependencies:
 
@@ -69,4 +69,35 @@ Build steps:
 
     For stats on the generated ZKIF, install the zkinterface tools with `cargo install zkinterface`, then run `zkif stats out/grit`.
 
- 4. Check the ZKIF output with Quark ???
+ 4. Check the ZKIF output with Quark.  This has two parts.
+
+    First, start the prover server:
+
+    ```
+    cd swanky
+    cargo run --release --example mac-n-cheese-zkif -- \
+        prove \
+        --listen-addr 127.0.0.1:4433 \
+        --tls-cert mac-n-cheese/network/test-certs/localhost.fullchain.crt \
+        --tls-key mac-n-cheese/network/test-certs/localhost.key \
+        ../witness-checker/out/grit/{header,constraints,witness}.zkif
+    ```
+
+    In a second terminal, run the verifier:
+
+    ```
+    cd swanky
+    cargo run --release --example mac-n-cheese-zkif -- \
+        verify \
+        --root-ca mac-n-cheese/network/test-certs/rootCA.crt \
+        --host localhost --port 4433 \
+        ../witness-checker/out/grit/{header,constraints}.zkif
+    ```
+
+    This part requires about 60GB RAM and takes about 15 minutes to run.  Once it finishes, the verifier should print a success message and exit:
+
+    ```
+    2020-10-19 09:46:24,540 INFO  [mac_n_cheese_network] verified successfully 335433094555710354779503521424195742509. VOLE stats read 0 bytes. wrote 0 bytes.. proving stats read 3645060096 bytes. wrote 32 bytes.
+    ```
+
+    The prover will keep running, so you should kill it with `^C` at this point.
