@@ -1,7 +1,7 @@
 Repos:
 
 * fromager/cheesecloth/grit>, `master` branch
-* fromager/cheesecloth/microram>, `no-implicit-flag` branch
+* fromager/cheesecloth/microram>, `master` branch
 * fromager/cheesecloth/witness-checker>, `grit-support` branch
 * marc/swanky>, `mac-and-cheese` branch
 

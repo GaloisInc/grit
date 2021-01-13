@@ -1,6 +1,5 @@
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 // Assert that the trace is valid only if `cond` is non-zero.
 void __cc_flag_invalid(void);
@@ -21,52 +20,55 @@ void __cc_bug_if(int cond) {
     }
 }
 
-// Allocate `size` words of memory.
+// Allocate `size` bytes of memory.
 char* __cc_malloc(size_t size);
 // Free the allocation starting at `ptr`.
 void __cc_free(char* ptr);
 
-// Let the prover arbitrarily choose an address to poison in the range `start
-// <= ptr < end`.  The prover returns `NULL` to indicate that nothing should be
+// Let the prover arbitrarily choose a word to poison in the range `start <=
+// ptr < end`.  The prover returns `NULL` to indicate that nothing should be
 // poisoned.
-char* __cc_advise_poison(char* start, char* end);
+uintptr_t* __cc_advise_poison(char* start, char* end);
 
 // Write `val` to `*ptr` and poison `*ptr`.  If `*ptr` is already poisoned, the
 // trace is invalid.
-void __cc_write_and_poison(char* ptr, uintptr_t val);
+void __cc_write_and_poison(uintptr_t* ptr, uintptr_t val);
 
-// Allocate a block of `size` words.  (Actual `libc` malloc works in bytes.)
-char* malloc_words(size_t size) {
+// Allocate a block of `size` bytes.
+char* malloc_internal(size_t size) {
     char* ptr = __cc_malloc(size);
 
     // Compute and validate the size of the allocation provided by the prover.
     uintptr_t addr = (uintptr_t)ptr;
     size_t region_size = 1ull << ((addr >> 58) & 63);
-    // The allocated region must have space for `size` words, plus an
+    // The allocated region must have space for `size` bytes, plus an
     // additional word for metadata.
-    __cc_valid_if(region_size >= size + 1 && addr % region_size == 0);
+    __cc_valid_if(region_size >= size + sizeof(uintptr_t) && addr % region_size == 0);
+    // Note that `region_size` is always a power of two and is at least the
+    // word size, so the address must be a multiple of the word size.
 
     // Write 1 (allocated) to the metadata field, and poison it to prevent
     // tampering.  This will make the trace invalid if the metadata word is
     // already poisoned (this happens if the prover tries to return the same
     // region for two separate allocations).
-    // region twice).
-    char* metadata = ptr + region_size - 1;
+    uintptr_t* metadata = (uintptr_t*)(ptr + region_size - sizeof(uintptr_t));
     __cc_write_and_poison(metadata, 1);
 
     // Choose a word to poison in the range `ptr .. metadata`.
-    char* poison = __cc_advise_poison(ptr + size, metadata);
+    uintptr_t* poison = __cc_advise_poison(ptr + size, (char*)metadata);
     if (poison != NULL) {
+        // The poisoned address must be well-aligned.
+        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
         // The poisoned address must be in the unused space at the end of the
         // region.
-        __cc_valid_if(ptr + size <= poison && poison < metadata);
+        __cc_valid_if(ptr + size <= (char*)poison && poison < metadata);
         __cc_write_and_poison(poison, 0);
     }
 
     return ptr;
 }
 
-void free_words(char* ptr) {
+void free_internal(char* ptr) {
     if (ptr == NULL) {
         return;
     }
@@ -88,11 +90,13 @@ void free_words(char* ptr) {
     __cc_free(ptr);
 
     // Choose an address to poison.
-    char* metadata = ptr + region_size - 1;
-    char* poison = __cc_advise_poison(ptr, metadata);
+    uintptr_t* metadata = (uintptr_t*)(ptr + region_size - sizeof(uintptr_t));
+    uintptr_t* poison = __cc_advise_poison(ptr, (char*)metadata);
     if (poison != NULL) {
+        // The poisoned address must be well-aligned.
+        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
         // The pointer must be somewhere within the freed region.
-        __cc_valid_if(ptr <= poison && poison < metadata);
+        __cc_valid_if(ptr <= (char*)poison && poison < metadata);
         __cc_write_and_poison(poison, 0);
     }
 }
@@ -110,11 +114,11 @@ void __llvm__memset__p0i8__i64(uint8_t *dest, uint8_t val, uint64_t len) {
 }
 
 void* malloc(size_t size) {
-    return (void*)malloc_words(size);
+    return (void*)malloc_internal(size);
 }
 
 void free(void* ptr) {
-    free_words((char*)ptr);
+    free_internal((char*)ptr);
 }
 
 int strcmp(const char *s1, const char *s2) {
@@ -143,12 +147,6 @@ size_t strlen(const char* s) {
     return t - s;
 }
 
-char *strdup(const char *s) {
-    char* t = malloc(strlen(s) + 1);
-    strcpy(t, s);
-    return t;
-}
-
 char *strcpy(char *dest, const char *src) {
     char* orig_dest = dest;
     while (*src) {
@@ -158,3 +156,10 @@ char *strcpy(char *dest, const char *src) {
     }
     return orig_dest;
 }
+
+char *strdup(const char *s) {
+    char* t = malloc(strlen(s) + 1);
+    strcpy(t, s);
+    return t;
+}
+
