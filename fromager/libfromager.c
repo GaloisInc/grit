@@ -1,24 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
-
-// Assert that the trace is valid only if `cond` is non-zero.
-void __cc_flag_invalid(void);
-// Indicate that the program has exhibited a bug if `cond` is non-zero.
-void __cc_flag_bug(void);
-
-// Assert that the trace is valid only if `cond` is non-zero.
-void __cc_valid_if(int cond) {
-    if (!cond) {
-        __cc_flag_invalid();
-    }
-}
-
-// Indicate that the program has exhibited a bug if `cond` is non-zero.
-void __cc_bug_if(int cond) {
-    if (cond) {
-        __cc_flag_bug();
-    }
-}
+#include <fromager.h>
 
 // Allocate `size` bytes of memory.
 char* __cc_malloc(size_t size);
@@ -43,7 +25,10 @@ char* malloc_internal(size_t size) {
     size_t region_size = 1ull << ((addr >> 58) & 63);
     // The allocated region must have space for `size` bytes, plus an
     // additional word for metadata.
-    __cc_valid_if(region_size >= size + sizeof(uintptr_t) && addr % region_size == 0);
+    __cc_valid_if(region_size >= size + sizeof(uintptr_t),
+        "allocated region size is too small");
+    __cc_valid_if(addr % region_size == 0,
+        "allocated address is misaligned for its region size");
     // Note that `region_size` is always a power of two and is at least the
     // word size, so the address must be a multiple of the word size.
 
@@ -58,10 +43,14 @@ char* malloc_internal(size_t size) {
     uintptr_t* poison = __cc_advise_poison(ptr + size, (char*)metadata);
     if (poison != NULL) {
         // The poisoned address must be well-aligned.
-        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
+        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0,
+            "poison address is not word-aligned");
         // The poisoned address must be in the unused space at the end of the
         // region.
-        __cc_valid_if(ptr + size <= (char*)poison && poison < metadata);
+        __cc_valid_if(ptr + size <= (char*)poison,
+            "poisoned word overlaps usable allocation");
+        __cc_valid_if(poison < metadata,
+            "poisoned word overlaps allocation metadata");
         __cc_write_and_poison(poison, 0);
     }
 
@@ -78,7 +67,8 @@ void free_internal(char* ptr) {
     uintptr_t region_size = 1ull << log_region_size;
 
     // Ensure `ptr` points to the start of a region.
-    __cc_bug_if((uintptr_t)ptr % region_size != 0);
+    __cc_bug_if((uintptr_t)ptr % region_size != 0,
+        "freed pointer not the start of a region");
 
     // Write to `*ptr`.  This memory access lets us catch double-free and
     // free-before-alloc by turning them into use-after-free and
@@ -94,9 +84,13 @@ void free_internal(char* ptr) {
     uintptr_t* poison = __cc_advise_poison(ptr, (char*)metadata);
     if (poison != NULL) {
         // The poisoned address must be well-aligned.
-        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0);
+        __cc_valid_if((uintptr_t)poison % sizeof(uintptr_t) == 0,
+            "poison address is not word-aligned");
         // The pointer must be somewhere within the freed region.
-        __cc_valid_if(ptr <= (char*)poison && poison < metadata);
+        __cc_valid_if(ptr <= (char*)poison,
+            "poisoned word is before the freed region");
+        __cc_valid_if(poison < metadata,
+            "poisoned word overlaps allocation metadata");
         __cc_write_and_poison(poison, 0);
     }
 }

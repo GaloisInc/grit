@@ -4,8 +4,12 @@ set -e
 # Note: if your LLVM binaries have a version suffix (such as `llvm-link-9`),
 # set the `LLVM_SUFFIX` environment variable (e.g. `LLVM_SUFFIX=-9`).
 
-CC="clang${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1"
-CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti"
+if [[ -n "$FROMAGER_DEBUG" ]]; then
+    CFLAGS="$CFLAGS -DFROMAGER_DEBUG"
+fi
+
+CC="clang${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 $CFLAGS"
+CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti $CFLAGS"
 
 # Build only the libraries we actually need.
 mkdir -p build build/fromager
@@ -32,8 +36,8 @@ llvm-link${LLVM_SUFFIX} \
 
 # Compile with -no-builtin so that Clang/LLVM doesn't try to optimize our
 # implementation of `memcpy` into a simple `memcpy` call.
-$CC -O3 -c fromager/libfromager.c -o build/fromager/libfromager.o -fno-builtin
-$CXX -O3 -c fromager/libfromager++.cpp -o build/fromager/libfromager++.o
+$CC -O3 -c fromager/libfromager.c -I fromager -o build/fromager/libfromager.o -fno-builtin
+$CXX -O3 -c fromager/libfromager++.cpp -I fromager -o build/fromager/libfromager++.o
 
 llvm-link${LLVM_SUFFIX} \
     build/fromager/{driver-full.bc,libfromager.o,libfromager++.o} \
