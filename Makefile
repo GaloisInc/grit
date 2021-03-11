@@ -29,11 +29,11 @@ ifneq (,$(findstring CYGWIN,$(UNAME)))
 endif
 
 ifneq (,$(findstring Darwin,$(UNAME)))
-	SDK	:=	/Developer/SDKs/MacOSX10.4u.sdk
-	OSXCFLAGS	:= -mmacosx-version-min=10.4 -isysroot $(SDK) -arch i386 -arch ppc
+	SDK	:=	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+	OSXCFLAGS	:= -mmacosx-version-min=10.7 -isysroot $(SDK) -stdlib=libc++ -std=c++11 #-arch i386 -arch ppc
 	OSXCXXFLAGS	:=	$(OSXCFLAGS)
 	CXXFLAGS	+=	-fvisibility=hidden
-	LDFLAGS		+= -mmacosx-version-min=10.4 -Wl,-syslibroot,$(SDK) -arch i386 -arch ppc
+	LDFLAGS		+= -mmacosx-version-min=10.4 -Wl,-syslibroot,$(SDK) #-arch i386 -arch ppc
 endif
 
 ifneq (,$(findstring Linux,$(UNAME)))

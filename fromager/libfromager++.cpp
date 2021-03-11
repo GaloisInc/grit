@@ -4,6 +4,6 @@ void* operator new(std::size_t sz) {
     return malloc(sz);
 }
 
-void operator delete(void* ptr) noexcept {
+void operator delete(void* ptr) {
     free(ptr);
 }
