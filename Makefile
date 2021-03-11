@@ -30,8 +30,8 @@ endif
 
 ifneq (,$(findstring Darwin,$(UNAME)))
 	SDK	:=	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-	OSXCFLAGS	:= -mmacosx-version-min=10.7 -isysroot $(SDK) -stdlib=libc++ -std=c++11 #-arch i386 -arch ppc
-	OSXCXXFLAGS	:=	$(OSXCFLAGS)
+	OSXCFLAGS	:= -mmacosx-version-min=10.7 -isysroot $(SDK) #-arch i386 -arch ppc
+	OSXCXXFLAGS	:=	$(OSXCFLAGS) -stdlib=libc++ -std=c++ 
 	CXXFLAGS	+=	-fvisibility=hidden
 	LDFLAGS		+= -mmacosx-version-min=10.7 -Wl,-syslibroot,$(SDK) #-arch i386 -arch ppc
 endif
