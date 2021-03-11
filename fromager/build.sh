@@ -15,17 +15,11 @@ CXX="clang++${LLVM_SUFFIX} -flto -O1 -mprefer-vector-width=1 -fno-rtti $CFLAGS"
 mkdir -p build build/fromager
 make libcldib.a libgrit.a build/driver.o CXX="$CXX"
 
-echo "### BUILD COMPLETED"
-
 $CXX -I cldib -I libgrit \
     -c fromager/driver_secret.cpp -o build/fromager/driver_secret.o
 
-echo "### C++ call completed"
-
 # Link the full libs + driver into a single bitcode file
 llvm-link${LLVM_SUFFIX} build/*.o -o build/fromager/driver-main.bc
-
-echo "### Link call completed"
 
 # Optimize, removing unused public symbols
 opt${LLVM_SUFFIX} \
@@ -34,8 +28,6 @@ opt${LLVM_SUFFIX} \
     -O3 --scalarizer -O1 \
     build/fromager/driver-main.bc \
     -o build/fromager/driver-opt.bc
-
-echo "### optimization call completed"
 
 
 llvm-link${LLVM_SUFFIX} \
