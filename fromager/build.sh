@@ -29,7 +29,6 @@ opt${LLVM_SUFFIX} \
     build/fromager/driver-main.bc \
     -o build/fromager/driver-opt.bc
 
-
 llvm-link${LLVM_SUFFIX} \
     build/fromager/driver-opt.bc \
     build/fromager/driver_secret.o \
@@ -38,7 +37,7 @@ llvm-link${LLVM_SUFFIX} \
 # Compile with -no-builtin so that Clang/LLVM doesn't try to optimize our
 # implementation of `memcpy` into a simple `memcpy` call.
 $CC -O3 -c fromager/libfromager.c -I fromager -o build/fromager/libfromager.o -fno-builtin
-$CXX -O3 -c fromager/libfromager++.cpp -I fromager -o build/fromager/libfromager++.o
+$CXX -O3 -c fromager/libfromager++.cpp -I fromager -o build/fromager/libfromager++.o  -std=c++11
 
 llvm-link${LLVM_SUFFIX} \
     build/fromager/{driver-full.bc,libfromager.o,libfromager++.o} \
