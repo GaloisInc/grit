@@ -157,8 +157,7 @@ dist-bin: all
 dist: dist-src dist-bin
 
 build/%.o	:	%.cpp
-	$(CXX) -E -MMD -MF build/$(*).d $(CXXFLAGS) $< > /dev/null
-	$(CXX) $(OSXCXXFLAGS) $(CXXFLAGS) -o $@ -c $<
+	$(CXX) $(OSXCXXFLAGS) $(CXXFLAGS) -MMD -MF build/$(*).d -o $@ -c $<
 
 %.a	:
 	rm -f $@
