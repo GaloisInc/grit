@@ -49,4 +49,4 @@ llvm-dis${LLVM_SUFFIX} driver-link.bc -o driver-link.ll
 sed -i -e 's/nofree//g' driver-link.ll
 
 # Produce an executable
-clang++${LLVM_SUFFIX} -o driver driver-opt.bc -lm -lpthread
+clang++${LLVM_SUFFIX} -o driver build/fromager/driver-opt.bc -lm -lpthread
