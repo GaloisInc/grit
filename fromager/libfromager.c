@@ -53,10 +53,11 @@ void* malloc(size_t size) {
             "poisoned word overlaps allocation metadata");
         __cc_write_and_poison(poison, 0);
     }
+    return (void*)ptr;
 }
 
 void free(void* ptr0) {
-    char* ptr = (char*) ptr0;
+    char* ptr = ptr0;
     if (ptr == NULL) {
         return;
     }
