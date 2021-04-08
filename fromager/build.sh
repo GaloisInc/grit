@@ -81,6 +81,7 @@ llvm-link${LLVM_SUFFIX} \
 
 opt${LLVM_SUFFIX} \
     build/fromager/driver-microram-full.bc \
+    --internalize --internalize-public-api-list="$keep_symbols" \
     --strip-debug --globaldce \
     -o build/fromager/driver-microram-full-nodebug.bc
 
