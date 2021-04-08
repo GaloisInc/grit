@@ -18,6 +18,11 @@ CFLAGS="-flto -O1 -mprefer-vector-width=1
     -ggdb
     "
 
+cc_instrument=
+if [ -n "$CC_INSTRUMENT" ]; then
+    cc_instrument=--cc-instrument
+fi
+
 if [[ -n "$FROMAGER_DEBUG" ]]; then
     CFLAGS="$CFLAGS -DFROMAGER_DEBUG"
 fi
@@ -59,7 +64,7 @@ keep_symbols=$keep_symbols,__llvm__ctpop__i32
 opt${LLVM_SUFFIX} \
     -load ../llvm-passes/passes.so \
     --internalize --internalize-public-api-list="$keep_symbols" \
-    --cc-instrument \
+    $cc_instrument \
     --force-vector-width=1 \
     -O3 --scalarizer -O1 \
     --strip-debug \
