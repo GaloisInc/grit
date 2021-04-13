@@ -17,7 +17,7 @@ uintptr_t* __cc_advise_poison(char* start, char* end);
 void __cc_write_and_poison(uintptr_t* ptr, uintptr_t val);
 
 // Allocate a block of `size` bytes.
-char* malloc_internal(size_t size) {
+void* malloc(size_t size) {
     char* ptr = __cc_malloc(size);
 
     // Compute and validate the size of the allocation provided by the prover.
@@ -53,11 +53,11 @@ char* malloc_internal(size_t size) {
             "poisoned word overlaps allocation metadata");
         __cc_write_and_poison(poison, 0);
     }
-
-    return ptr;
+    return (void*)ptr;
 }
 
-void free_internal(char* ptr) {
+void free(void* ptr0) {
+    char* ptr = ptr0;
     if (ptr == NULL) {
         return;
     }
@@ -107,13 +107,13 @@ void __llvm__memset__p0i8__i64(uint8_t *dest, uint8_t val, uint64_t len) {
     }
 }
 
-void* malloc(size_t size) {
-    return (void*)malloc_internal(size);
-}
+//void* malloc(size_t size) {
+//    return (void*)malloc_internal(size);
+//}
 
-void free(void* ptr) {
-    free_internal((char*)ptr);
-}
+//void free(void* ptr) {
+//    free_internal((char*)ptr);
+//}
 
 int strcmp(const char *s1, const char *s2) {
     for (;;) {
