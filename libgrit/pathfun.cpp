@@ -478,7 +478,7 @@ char *str_fix_ident(char *dst, const char *src, int size)
 }
 
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(FROMAGER)
 
 char *strupr(char *str)
 {
