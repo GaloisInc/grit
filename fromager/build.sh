@@ -43,4 +43,4 @@ cc_objects="
         --override=build/driver.o
     " \
     cc_secret_objects=build/fromager/driver_secret.bc \
-    $PICOLIBC_HOME/lib/fromager-link.sh
+    $PICOLIBC_HOME/lib/fromager-link.sh "$@"
